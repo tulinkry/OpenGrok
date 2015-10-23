@@ -21,6 +21,161 @@
  * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
  */
 
+(function($) {
+    var uniqueCntr = 0;
+    $.fn.scrolled = function (waitTime, fn) {
+        if (typeof waitTime === "function") {
+            fn = waitTime;
+            waitTime = 500;
+        }
+        var tag = "scrollTimer" + uniqueCntr++;
+        this.scroll(function () {
+            var self = $(this);
+            var timer = self.data(tag);
+            if (timer) {
+                clearTimeout(timer);
+            }
+            timer = setTimeout(function () {
+                self.removeData(tag);
+                fn.call(self[0]);
+            }, waitTime);
+            self.data(tag, timer);
+        });
+    }
+})(jQuery);
+
+
+(function(window, $){
+    /*
+     * DiffJumper module
+     * 
+     * called for example like
+     * $("#difftable").scrollSpy(options)
+     * where options are
+     * {
+     *  $parent: // jQuery object for common anchestor of all diff features
+     *  $content: // jQuery object which is anchestor and scrollable - fixing animation
+     *  chunkSelector: // String describing chunk selection
+     *  addSelector: // String describing added lines
+     *  delSelector: // String describin deleted lines
+     *  $toggleButton: // jQuery object of button to toggle the jumper window
+     *  animationDuration: // duration of toggling the jumper window
+     * }
+     */
+    var scroll = function($parent, options) {
+        var inner = {
+            initialized: false,
+            currentIndex: -1,
+            $methods: $(),
+            options: {},
+            defaults: {
+                $parent: $("#src"),
+                $scrollable: $("#content"),
+                selectors: {
+                    //".xa": "Macro",
+                    //".xa": "Argument",
+                    //".xl": "Local",
+                    //".xv": "Variable",
+                    ".xc": "Class",
+                    ".xp": "Package",
+                    ".xi": "Interface",
+                    ".xn": "Namespace",
+                    ".xe": "Enum",
+                    ".xer": "Enumerator",
+                    ".xs": "Struct",
+                    ".xt": "Typedef",
+                    ".xts": "Typedefs",
+                    ".xu": "Union",
+                    //".xfld": "Field",
+                    //".xmb": "Member",
+                    ".xf": "Function",
+                    ".xmt": "Method",
+                    ".xsr": "Subroutine",
+                    ".scope": "Scope"
+                }
+            },
+            initialParentScroll: 115,
+            $panel: null,
+            createPanel: function(){
+                inner.$panel = $("<div></div>")
+                        .addClass("diff_navigation_style")
+                        .addClass("xref_navigation")
+                        .appendTo($("body"))
+            },
+            initMethods: function(){
+                if(inner.$methods.length)
+                    return
+ 
+                var selectors = Object.keys(inner.options.selectors)
+                
+                var selector = selectors.join(", ");
+                
+                console.log(selector)
+                
+                inner.$methods = $(selector)
+            },
+            init: function(){
+                
+                inner.createPanel();
+                
+                inner.initMethods ();
+                
+                inner.options.$scrollable.scrolled (300, function(el){
+                    $el = $(el)
+                    $m = inner.$methods.filter(function(){
+                        return $(this).offset().top - inner.initialParentScroll <= 0 && $(this).text() !== ""
+                    }).last();
+                    
+                    console.log($m)
+                    
+                    if(!$m.length || !$m.get(0)) {
+                        inner.$panel.hide()
+                        return
+                    }
+                    var line = $m.prevUntil(".l, .hl").prev()
+                    var cl = inner.options.selectors["." + $m.get(0).className]
+                    var txt = "Line " + line.attr("name") + ": " + cl + " - " + $m.text()
+                    
+                    inner.$panel.show().text(txt)
+                    
+                    if(inner.$panel.text() === "")
+                        inner.$panel.hide()
+                    
+                });
+
+            }
+            
+            
+        }
+        
+        this.init = (function($parent, options){
+            if (inner.initialized)
+                return
+            inner.options = $.extend(true, {}, inner.defaults, options)
+            
+            inner.init ()
+
+            inner.initialized = true
+            
+            return this
+        })($parent, options)
+        
+    }
+    
+    $.fn.scrollSpy = function(options){
+        return this.each(function(){
+           new scroll($(this), options);
+        });
+    }
+    
+}(window, window.jQuery));
+
+
+
+$(document).ready(function(){
+   $("#src").scrollSpy()
+});
+
 /*
  * Portions Copyright 2011 Jens Elkner.
  */

@@ -724,3 +724,23 @@ a.scope { /* scope */                   color: dodgerblue; font-weight: bold; pa
 }
 /* ############### end of footer ############## */
 
+/**** DIFF NAVIGATION/JUMPER *****/
+
+.diff_navigation_style {
+    border: solid 1px #c0c0c0;
+    border-radius: 5px;
+    box-shadow: 5px 5px 3px #888888;
+    background-color: rgb(255,255,204);
+    padding: 1em;    
+}
+
+.xref_navigation {
+    position: fixed;
+    top: 105px;
+    left: 6ex;
+    //width: 30%;
+    
+    background-color: rgba(255,255,204,0.80);
+    padding-top: 0;
+    padding-bottom: 0;
+}
