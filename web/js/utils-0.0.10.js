@@ -1514,7 +1514,25 @@ $(document).ready(function () {
     /**
      * Display last modified date in search results on hover over the filename
      */
-    $('a.result-annotate').tooltip()
+    $('a.result-annotate').tooltip();
+
+    $('select.pagination-limit').change(function () {
+        var $el = $(this)
+        window.location.href = setParameter(window.location.href, 'n', $el.val());
+        return false;
+    });
+    $('input.pagination-page').closest('form').submit(function () {
+        var $el = $(this).find('input.pagination-page').first();
+        var $input = $el.data('for')
+        if ($input === undefined) {
+            return false;
+        }
+        $input = $(this).find($input);
+        var limit = $el.data('limit') || 25;
+
+        window.location.href = setParameter(window.location.href, 'start', (parseInt($input.val()) - 1) * limit);
+        return false;
+    })
 });
 
 /**

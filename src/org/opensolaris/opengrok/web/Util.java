@@ -1370,6 +1370,24 @@ public final class Util {
                 buf.append("<span>...</span>");
                 generatePageLink.apply(lastPage);
             }
+            buf.append("<select name=\"limit\" class=\"pagination-limit\">");
+            for (int i : new int[]{10, 25, 50, 100, 200, 500, 1000}) {
+                buf.append("<option value=\"").append(i).append("\"");
+                if (i == limit) {
+                    buf.append(" selected");
+                }
+                buf.append(">");
+                buf.append(i);
+                buf.append("</option>");
+            }
+            buf.append("</select>");
+
+            buf.append("<form action=\"#\" method=\"get\">");
+            buf.append("<input type=\"text\" id=\"pagination-page-input\" name=\"offset\" size=\"3\" class=\"q\">");
+            buf.append("<input type=\"submit\" class=\"pagination-page\" data-for=\"#pagination-page-input\" data-limit=\"");
+            buf.append(limit);
+            buf.append("\" value=\"Go!\">");
+            buf.append("</form>");
             return buf.toString();
         }
         return slider;
