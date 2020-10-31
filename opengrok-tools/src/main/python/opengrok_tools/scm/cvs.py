@@ -19,22 +19,20 @@
 
 #
 # Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+# Portions Copyright (c) 2020, Krystof Tulinger <k.tulinger@seznam.cz>
 #
 
-from ..utils.command import Command
-from .repository import Repository, RepositoryException
 from shutil import which
+
+from .repository import Repository, RepositoryException
+from ..utils.command import Command
 
 
 class CVSRepository(Repository):
     def __init__(self, logger, path, project, command, env, hooks, timeout):
-
         super().__init__(logger, path, project, command, env, hooks, timeout)
 
-        if command:
-            self.command = command
-        else:
-            self.command = which("cvs")
+        self.command = self._repository_command(command, default=lambda: which('cvs'))
 
         if not self.command:
             raise RepositoryException("Cannot get cvs command")

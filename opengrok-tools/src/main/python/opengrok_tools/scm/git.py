@@ -19,22 +19,20 @@
 
 #
 # Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+# Portions Copyright (c) 2020, Krystof Tulinger <k.tulinger@seznam.cz>
 #
 
-from ..utils.command import Command
-from .repository import Repository, RepositoryException
 from shutil import which
+
+from .repository import Repository, RepositoryException
+from ..utils.command import Command
 
 
 class GitRepository(Repository):
     def __init__(self, logger, path, project, command, env, hooks, timeout):
-
         super().__init__(logger, path, project, command, env, hooks, timeout)
 
-        if command:
-            self.command = command
-        else:
-            self.command = which("git")
+        self.command = self._repository_command(command, default=lambda: which('git'))
 
         if not self.command:
             raise RepositoryException("Cannot get git command")
@@ -49,30 +47,7 @@ class GitRepository(Repository):
             cmd.log_error("failed to configure git pull.ff")
 
     def reposync(self):
-        git_command = [self.command, "pull", "--ff-only"]
-        cmd = self.getCommand(git_command, work_dir=self.path,
-                              env_vars=self.env, logger=self.logger)
-        cmd.execute()
-        self.logger.info("output of {}:".format(git_command))
-        self.logger.info(cmd.getoutputstr())
-        if cmd.getretcode() != 0 or cmd.getstate() != Command.FINISHED:
-            cmd.log_error("failed to perform pull")
-            return 1
+        return self._run_custom_sync_command([self.command, 'pull', '--ff-only'])
 
-        return 0
-
-    def incoming(self):
-        git_command = [self.command, "pull", "--dry-run"]
-        cmd = self.getCommand(git_command, work_dir=self.path,
-                              env_vars=self.env, logger=self.logger)
-        cmd.execute()
-        self.logger.info("output of {}:".format(git_command))
-        if cmd.getretcode() != 0 or cmd.getstate() != Command.FINISHED:
-            cmd.log_error("failed to perform pull")
-            raise RepositoryException('failed to check for incoming in '
-                                      'repository {}'.format(self))
-
-        if len(cmd.getoutput()) == 0:
-            return False
-        else:
-            return True
+    def incoming_check(self):
+        return self._run_custom_incoming_command([self.command, 'pull', '--dry-run'])

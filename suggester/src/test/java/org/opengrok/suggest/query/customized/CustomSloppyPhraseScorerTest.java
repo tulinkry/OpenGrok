@@ -18,7 +18,7 @@
  */
 
 /*
- * Copyright (c) 2018, 2020 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
  * Portions Copyright (c) 2020, Chris Fraire <cfraire@me.com>.
  */
 package org.opengrok.suggest.query.customized;
@@ -47,8 +47,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.junit.Assert.assertThat;
 
 public class CustomSloppyPhraseScorerTest {
 

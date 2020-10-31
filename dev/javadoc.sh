@@ -3,28 +3,38 @@
 set -e
 set -x
 
-if [[ "${TRAVIS_REPO_SLUG}" != "oracle/opengrok" ||
-    "${TRAVIS_PULL_REQUEST}" != "false" ||
-    "${TRAVIS_BRANCH}" != "master" ]]; then
+if [[ -z "$OPENGROK_BUILD_DIR" ]]; then
+	echo -e "empty OPENGROK_BUILD_DIR"
+	exit 1
+fi
+
+if [[ -n $OPENGROK_REF && $OPENGROK_REF == refs/heads/* ]]; then
+	OPENGROK_BRANCH=${OPENGROK_REF#"refs/heads/"}
+fi
+
+if [[ "${OPENGROK_REPO_SLUG}" != "oracle/opengrok" ||
+    -n "${OPENGROK_PULL_REQUEST}" ||
+    "${OPENGROK_BRANCH}" != "master" ]]; then
+	echo "Skipping Javadoc refresh"
 	exit 0
 fi
 
-echo -e "Publishing javadoc...\n"
+BRANCH="gh-pages"
 
+echo -e "Building Javadoc...\n"
 ./mvnw -DskipTests=true site
 
-git config --global user.email "travis@travis-ci.org"
-git config --global user.name "travis-ci"
-git clone --quiet --branch=gh-pages \
-    https://${GH_PAGES_TOKEN}@github.com/oracle/opengrok gh-pages
+echo -e "Publishing javadoc to $BRANCH...\n"
+git config --global user.name "github-actions[bot]"
+git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-cd gh-pages
+cd "$BRANCH"
 if [[ -d ./javadoc ]]; then
 	git rm -rf ./javadoc
 fi
-cp -Rf ${TRAVIS_BUILD_DIR}/target/site/apidocs ./javadoc
+cp -Rf "$OPENGROK_BUILD_DIR/target/site/apidocs" ./javadoc
 git add -f ./javadoc
-git commit -m "Lastest javadoc auto-pushed to gh-pages"
-git push -fq origin gh-pages
+git commit -m "Lastest javadoc auto-pushed to branch $BRANCH"
+git push -fq origin "$BRANCH"
 
-echo -e "Published Javadoc to gh-pages.\n"
+echo -e "Published Javadoc to branch $BRANCH.\n"

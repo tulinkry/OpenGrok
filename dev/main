@@ -5,48 +5,26 @@
 # for their fork. Avoid it also for release builds as that can fail such
 # build unnecessarily.
 #
+
+if [[ -n $OPENGROK_REF && $OPENGROK_REF == refs/heads/* ]]; then
+	OPENGROK_BRANCH=${OPENGROK_REF#"refs/heads/"}
+fi
+
 extra_args=""
-if [[ "x$TRAVIS_REPO_SLUG" == "xoracle/opengrok" && "x$TRAVIS_BRANCH" == "xmaster" ]]; then
+if [[ "x$OPENGROK_REPO_SLUG" == "xoracle/opengrok" && "x$OPENGROK_BRANCH" == "xmaster" ]]; then
 	echo "Enabling Coveralls"
-	extra_args="jacoco:report coveralls:report"
+	if [[ -n $OPENGROK_COVERALLS_TOKEN ]]; then
+		extra_args="$extra_args -DrepoToken=$OPENGROK_COVERALLS_TOKEN"
+	fi
+	extra_args="$extra_args jacoco:report coveralls:report"
 
 	#
 	# Sonar seems to only work on master branch commits.
 	#
-	if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+	if [[ -z "${OPENGROK_PULL_REQUEST}" ]]; then
 		echo "Enabling Sonar"
-		extra_args="$extra_args sonar:sonar"
+		extra_args="$extra_args -P sonar -Dsonar.login=$OPENGROK_SONAR_TOKEN sonar:sonar"
 	fi
 fi
 
-if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
-	JAVA_BASE="/c/Program Files/OpenJDK"
-	JDK_DIR=$(find "$JAVA_BASE/" -type d -name 'openjdk*' -maxdepth 1 | head -1)
-	export JAVA_HOME=${JAVA_HOME:-$JDK_DIR}
-	echo "JAVA_HOME set to $JAVA_HOME"
-	export PATH=${JAVA_HOME}/bin:${PATH}
-
-	export PATH=${PATH}:/c/ProgramData/chocolatey/lib/universal-ctags/tools
-	export PATH=${PATH}:/c/Program\ Files\ \(x86\)/Subversion/bin
-	export PATH=${PATH}:${JAVA_HOME}
-
-	PYTHON_PATH="/c/Python39"
-	if [[ ! -d $PYTHON_PATH ]]; then
-		>&2 echo "Not a directory: $PYTHON_PATH"
-		exit 1
-	fi
-	# needs to be before the default Python 2
-	export PATH=${PYTHON_PATH}:${PATH}
-
-	extra_args="$extra_args -Dorg.opengrok.indexer.analysis.Ctags=c:\\ProgramData\\chocolatey\\lib\\universal-ctags\\tools\\ctags.exe"
-fi
-
-ret=0
-./mvnw -B -V verify $extra_args || ret=1
-
-if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-	echo "Checking Apiary blueprint format"
-	node dev/parse.js || ret=1
-fi
-
-exit $ret
+./mvnw -B -V verify $extra_args

@@ -19,52 +19,25 @@
 
 #
 # Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+# Portions Copyright (c) 2020, Krystof Tulinger <k.tulinger@seznam.cz>
 #
 
-from ..utils.command import Command
-from .repository import Repository, RepositoryException
 from shutil import which
+
+from .repository import Repository, RepositoryException
 
 
 class RepoRepository(Repository):
     def __init__(self, logger, path, project, command, env, hooks, timeout):
-
         super().__init__(logger, path, project, command, env, hooks, timeout)
 
-        if command:
-            self.command = command
-        else:
-            self.command = which("repo")
+        self.command = self._repository_command(command, default=lambda: which('repo'))
 
         if not self.command:
             raise RepositoryException("Cannot get repo command")
 
     def reposync(self):
-        repo_command = [self.command, "sync", "-cf"]
-        cmd = self.getCommand(repo_command, work_dir=self.path,
-                              env_vars=self.env, logger=self.logger)
-        cmd.execute()
-        self.logger.info("output of {}:".format(cmd))
-        self.logger.info(cmd.getoutputstr())
-        if cmd.getretcode() != 0 or cmd.getstate() != Command.FINISHED:
-            cmd.log_error("failed to perform sync")
-            return 1
+        return self._run_custom_sync_command([self.command, 'sync', '-cf'])
 
-        return 0
-
-    def incoming(self):
-        repo_command = [self.command, "sync", "-n"]
-        cmd = self.getCommand(repo_command, work_dir=self.path,
-                              env_vars=self.env, logger=self.logger)
-        cmd.execute()
-        self.logger.info("output of {}:".format(cmd))
-        self.logger.info(cmd.getoutputstr())
-        if cmd.getretcode() != 0 or cmd.getstate() != Command.FINISHED:
-            cmd.log_error("failed to perform sync")
-            raise RepositoryException('failed to check for incoming in '
-                                      'repository {}'.format(self))
-
-        if len(cmd.getoutput()) == 0:
-            return False
-        else:
-            return True
+    def incoming_check(self):
+        return self._run_custom_incoming_command([self.command, 'sync', '-n'])

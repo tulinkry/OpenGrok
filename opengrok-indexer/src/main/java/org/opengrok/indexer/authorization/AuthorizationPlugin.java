@@ -18,7 +18,7 @@
  */
 
 /*
- * Copyright (c) 2017, 2018 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, 2018, Oracle and/or its affiliates. All rights reserved.
  * Portions Copyright (c) 2018, Chris Fraire <cfraire@me.com>.
  */
 package org.opengrok.indexer.authorization;
@@ -82,13 +82,11 @@ public class AuthorizationPlugin extends AuthorizationStack {
      * Call the load method on the underlying plugin if the plugin exists. Note
      * that the load method can throw any throwable from its body and it should
      * not stop the application.
-     *
      * <p>
-     * If the method is unable to load the plugin because of any reason (mostly
+     * <p>If the method is unable to load the plugin because of any reason (mostly
      * the class is not found, not instantiable or the load method throws an
      * exception) then any authorization check should fail for this plugin in
      * the future.
-     * </p>
      *
      * @param parameters parameters given in the configuration
      *

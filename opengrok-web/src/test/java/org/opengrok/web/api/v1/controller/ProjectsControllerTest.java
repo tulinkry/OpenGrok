@@ -18,8 +18,8 @@
  */
 
 /*
- * Copyright (c) 2018, 2020 Oracle and/or its affiliates. All rights reserved.
- * Portions Copyright (c) 2019-2020, Chris Fraire <cfraire@me.com>.
+ * Copyright (c) 2018, 2020, Oracle and/or its affiliates. All rights reserved.
+ * Portions Copyright (c) 2019, 2020, Chris Fraire <cfraire@me.com>.
  */
 package org.opengrok.web.api.v1.controller;
 
@@ -379,6 +379,9 @@ public class ProjectsControllerTest extends OGKJerseyTest {
         Path temp = Files.createTempFile("opengrok", "temp");
         Files.copy(HistoryGuru.getInstance().getClass().getResourceAsStream("/history/hg-export-subdir.txt"),
                 temp, StandardCopyOption.REPLACE_EXISTING);
+
+        // prevent 'uncommitted changes' error
+        MercurialRepositoryTest.runHgCommand(mercurialRoot, "revert", "--all");
 
         MercurialRepositoryTest.runHgCommand(mercurialRoot, "import", temp.toString());
 

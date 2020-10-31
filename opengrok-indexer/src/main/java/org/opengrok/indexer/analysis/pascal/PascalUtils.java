@@ -20,7 +20,6 @@
 /*
  * Copyright (c) 2018, Chris Fraire <cfraire@me.com>.
  */
-
 package org.opengrok.indexer.analysis.pascal;
 
 import java.util.regex.Pattern;
@@ -36,7 +35,7 @@ public class PascalUtils {
      * ¹Correctness in a long sequence of apostrophes is limited because Java
      * look-behind is not variable length but instead must have a definite
      * upper bound in the regex definition.
-     * </p>
+     *
      */
     public static final Pattern CHARLITERAL_APOS_DELIMITER =
         Pattern.compile("\\'((?<=^.(?!\\'))|(?<=[^\\'].(?!\\'))|(?<=^(\\'\\'){1,3}.(?!\\'))|(?<=[^\\'](\\'\\'){1,3}.(?!\\')))");

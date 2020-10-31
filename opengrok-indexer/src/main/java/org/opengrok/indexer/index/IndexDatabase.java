@@ -19,7 +19,7 @@
 
 /*
  * Copyright (c) 2008, 2019, Oracle and/or its affiliates. All rights reserved.
- * Portions Copyright (c) 2017-2020, Chris Fraire <cfraire@me.com>.
+ * Portions Copyright (c) 2017, 2020, Chris Fraire <cfraire@me.com>.
  */
 package org.opengrok.indexer.index;
 
@@ -843,19 +843,20 @@ public class IndexDatabase {
             return true;
         }
 
-        if (HistoryGuru.getInstance().hasHistory(file)) {
-            // versioned files should always be accepted
-            return true;
-        }
 
-        // this is an unversioned file, check if it should be indexed
         RuntimeEnvironment env = RuntimeEnvironment.getInstance();
-        boolean res = !env.isIndexVersionedFilesOnly();
-        if (!res) {
-            LOGGER.log(Level.FINER, "not accepting unversioned {0}",
-                absolutePath);
+        // Lookup history if indexing versioned files only.
+        // Skip the lookup entirely (which is expensive) if unversioned files are allowed
+        if (env.isIndexVersionedFilesOnly()) {
+            if (HistoryGuru.getInstance().hasHistory(file)) {
+                // versioned files should always be accepted
+                return true;
+            }
+            LOGGER.log(Level.FINER, "not accepting unversioned {0}", absolutePath);
+            return false;
         }
-        return res;
+        // unversioned files are allowed
+        return true;
     }
 
     /**

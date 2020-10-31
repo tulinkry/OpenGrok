@@ -7,7 +7,7 @@
 #  - DOCKER_USERNAME
 #  - DOCKER_PASSWORD
 #
-# These are set via https://travis-ci.com/OpenGrok/docker/settings
+# These are set via https://github.com/oracle/opengrok/settings/secrets
 #
 
 set -e
@@ -15,8 +15,12 @@ set -e
 API_URL="https://hub.docker.com/v2"
 IMAGE="opengrok/docker"
 
-if [[ -n $TRAVIS_TAG ]]; then
-	VERSION="$TRAVIS_TAG"
+if [[ -n $OPENGROK_REF && $OPENGROK_REF == refs/tags/* ]]; then
+	OPENGROK_TAG=${OPENGROK_REF#"refs/tags/"}
+fi
+
+if [[ -n $OPENGROK_TAG ]]; then
+	VERSION="$OPENGROK_TAG"
 	VERSION_SHORT=$( echo $VERSION | cut -d. -f1,2 )
 else
 	VERSION="latest"
@@ -33,7 +37,11 @@ if [[ -z $VERSION_SHORT ]]; then
 	exit 1
 fi
 
+echo "Version: $VERSION"
+echo "Short version: $VERSION_SHORT"
+
 # Build the image.
+echo "Building docker image"
 docker build \
     -t $IMAGE:$VERSION \
     -t $IMAGE:$VERSION_SHORT \
@@ -43,24 +51,25 @@ docker build \
 # Run the image in container. This is not strictly needed however
 # serves as additional test in automatic builds.
 #
+echo "Running the image in container"
 docker run -d $IMAGE
 docker ps -a
 
-# Travis can only work on master since it needs encrypted variables.
-if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then
+# This can only work on home repository since it needs encrypted variables.
+if [[ -n "$OPENGROK_PULL_REQUEST" ]]; then
 	echo "Not pushing Docker image for pull requests"
 	exit 0
 fi
 
 # The push only works on the main repository.
-if [[ "${TRAVIS_REPO_SLUG}" != "oracle/opengrok" ]]; then
+if [[ "$OPENGROK_REPO_SLUG" != "oracle/opengrok" ]]; then
 	echo "Not pushing Docker image for non main repository"
 	exit 0
 fi
 
 # Allow Docker push for release builds only.
-if [[ -z $TRAVIS_TAG ]]; then
-	echo "TRAVIS_TAG is empty"
+if [[ -z $OPENGROK_TAG ]]; then
+	echo "OPENGROK_TAG is empty"
 	exit 0
 fi
 
@@ -122,4 +131,4 @@ fi
 push_readme "${IMAGE}" "${TOKEN}" "docker/README.md"
 
 # update Microbadger
-curl -X POST https://hooks.microbadger.com/images/opengrok/docker/pSastb42Ikfn2dF5llR54sSPqbQ=
+curl -s -X POST https://hooks.microbadger.com/images/opengrok/docker/pSastb42Ikfn2dF5llR54sSPqbQ=

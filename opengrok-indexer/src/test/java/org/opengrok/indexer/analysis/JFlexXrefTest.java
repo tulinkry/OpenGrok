@@ -19,9 +19,8 @@
 
 /*
  * Copyright (c) 2010, 2019, Oracle and/or its affiliates. All rights reserved.
- * Portions Copyright (c) 2017-2019, Chris Fraire <cfraire@me.com>.
+ * Portions Copyright (c) 2017, 2019, Chris Fraire <cfraire@me.com>.
  */
-
 package org.opengrok.indexer.analysis;
 
 import java.io.File;
@@ -272,11 +271,9 @@ public class JFlexXrefTest {
     }
 
     /**
-     * <p>
      * Test the handling of #include in C and C++. In particular, these issues
      * are tested:
-     * </p>
-     *
+     * <p>
      * <ul>
      *
      * <li>

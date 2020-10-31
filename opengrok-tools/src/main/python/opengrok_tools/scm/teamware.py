@@ -19,16 +19,16 @@
 
 #
 # Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
+# Portions Copyright (c) 2020, Krystof Tulinger <k.tulinger@seznam.cz>
 #
 
-from ..utils.command import Command
-from .repository import Repository, RepositoryException
 import os
+
+from .repository import Repository, RepositoryException
 
 
 class TeamwareRepository(Repository):
     def __init__(self, logger, path, project, command, env, hooks, timeout):
-
         super().__init__(logger, path, project, command, env, hooks, timeout)
 
         #
@@ -39,6 +39,7 @@ class TeamwareRepository(Repository):
         # argument contains the path to the directory that contains
         # the binaries.
         #
+        command = self._repository_command(command)
         if command:
             if not os.path.isdir(command):
                 raise RepositoryException("Cannot construct Teamware "
@@ -65,14 +66,4 @@ class TeamwareRepository(Repository):
                               format(self.path))
             return 0
 
-        bringover_command = ["bringover"]
-        cmd = self.getCommand(bringover_command, work_dir=self.path,
-                              env_vars=self.env, logger=self.logger)
-        cmd.execute()
-        self.logger.info("output of {}:".format(cmd))
-        self.logger.info(cmd.getoutputstr())
-        if cmd.getretcode() != 0 or cmd.getstate() != Command.FINISHED:
-            cmd.log_error("failed to perform bringover")
-            return 1
-
-        return 0
+        return self._run_custom_sync_command(['bringover'])

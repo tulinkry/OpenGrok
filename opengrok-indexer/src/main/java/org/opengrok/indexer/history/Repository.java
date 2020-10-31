@@ -19,7 +19,7 @@
 
 /*
  * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
- * Portions Copyright (c) 2017-2020, Chris Fraire <cfraire@me.com>.
+ * Portions Copyright (c) 2017, 2020, Chris Fraire <cfraire@me.com>.
  */
 package org.opengrok.indexer.history;
 
@@ -50,6 +50,8 @@ import org.opengrok.indexer.configuration.RuntimeEnvironment;
 import org.opengrok.indexer.logger.LoggerFactory;
 import org.opengrok.indexer.util.BufferSink;
 import org.opengrok.indexer.util.Executor;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * An interface for an external repository.
@@ -95,6 +97,7 @@ public abstract class Repository extends RepositoryInfo {
      *
      * @return {@code true} if the repository can get history for directories
      */
+    @NotNull
     abstract boolean hasHistoryForDirectories();
 
     /**
@@ -124,15 +127,12 @@ public abstract class Repository extends RepositoryInfo {
     /**
      * <p>
      * Get the history after a specified revision.
-     * </p>
-     *
      * <p>
-     * The default implementation first fetches the full history and then throws
+     * <p>The default implementation first fetches the full history and then throws
      * away the oldest revisions. This is not efficient, so subclasses should
      * override it in order to get good performance. Once every subclass has
      * implemented a more efficient method, the default implementation should be
      * removed and made abstract.
-     * </p>
      *
      * @param file the file to get the history for
      * @param sinceRevision the revision right before the first one to return,
@@ -279,24 +279,25 @@ public abstract class Repository extends RepositoryInfo {
      * tags to changesets which actually exist in the history of given file.
      * Must be implemented repository-specific.
      *
-     * @see getTagList
-     * @param hist History we want to assign tags to.
+     * @see #getTagList
+     * @param hist History object we want to assign tags to.
      */
     void assignTagsInHistory(History hist) {
         if (hist == null) {
             return;
         }
+
         if (this.getTagList() == null) {
             throw new IllegalStateException("getTagList() is null");
         }
+
         Iterator<TagEntry> it = this.getTagList().descendingIterator();
         TagEntry lastTagEntry = null;
-        // Go through all commits of given file
         for (HistoryEntry ent : hist.getHistoryEntries()) {
             // Assign all tags created since the last revision
-            // Revision in this HistoryEntry must be already specified!
-            // TODO is there better way to do this? We need to "repeat"
-            // last element returned by call to next()
+            // Revision in this HistoryEntry must be already specified !
+            // TODO: is there better way to do this? We need to "repeat"
+            //   last element returned by call to next()
             while (lastTagEntry != null || it.hasNext()) {
                 if (lastTagEntry == null) {
                     lastTagEntry = it.next();
